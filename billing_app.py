@@ -332,8 +332,8 @@ def login():
 @app.route('/register/', methods=['POST'])
 def register():
     """Register Form"""
-    #try:
-    if request.method == 'POST':
+    try:
+      if request.method == 'POST':
         value_email = User.validate_email(request.json['emailaddress'])
         if value_email:
             new_user = User(
@@ -350,12 +350,12 @@ def register():
         else:
           app.logger.error('registration data already exists')
           return jsonify({'status':False})
-    else:
+      else:
           app.logger.error('registration wrong request')
           return jsonify({'status':False})
-    #except:
-    #  app.logger.error('registration function exception triggered')
-    #  return jsonify({'status':False})
+    except:
+      app.logger.error('registration function exception triggered')
+      return jsonify({'status':False})
 
 
 @app.route("/currentuser", methods=['GET'])
