@@ -320,6 +320,9 @@ def login():
     if request.method == 'POST':
         try:
          user = User.query.filter_by(email=request.json['emailaddress']).first()
+         print(user)
+         print(request.json['password'])   
+         print(user.check_password(request.json['password']))   
          if user is not None and user.check_password(request.json['password']):
                 token = jwt.encode({
                     'public_id': user.username,
