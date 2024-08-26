@@ -1,0 +1,11 @@
+shapely
+flask
+flask-cors
+flask-sqlalchemy
+requests
+jwt
+werkzeug
+pytz
+sqlalchemy
+networkx
+geoalchemy2
