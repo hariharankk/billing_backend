@@ -329,9 +329,10 @@ def login():
          else:
               app.logger.error('email method user name already exists')
               return jsonify({'status':False})
-        except:
+        except Exception as e:
+            error_message = str(e)
             app.logger.error('Login function exception triggered')
-            return jsonify({'status':False})
+            return jsonify({'status': False, 'message': error_message})
     else:
       return jsonify({'status':False})
 
