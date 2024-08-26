@@ -353,9 +353,10 @@ def register():
       else:
           app.logger.error('registration wrong request')
           return jsonify({'status':False})
-    except:
+    except Exception as e:
+      error_message = str(e)  
       app.logger.error('registration function exception triggered')
-      return jsonify({'status':False})
+      return jsonify({'status': False, 'message': error_message})
 
 
 @app.route("/currentuser", methods=['GET'])
