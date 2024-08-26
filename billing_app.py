@@ -8,7 +8,6 @@ import random
 import string
 from datetime import timedelta
 import numpy as np
-import os
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import random
@@ -28,39 +27,23 @@ from geoalchemy2.shape import to_shape
 import math
 
 
-#from pyngrok import ngrok  #NGROK not need
-
-# Set your ngrok authtoken
-#ngrok.set_auth_token("2NKKGX1X7To9Tbi4ab0wIYvyfsP_63PSNHUNtJ8HXdPoqktt5") #NGROK not need
-
-#public_url = ngrok.connect(5001)  # Change to a different port #NGROK not need
-#print(f"ngrok tunnel \"{public_url}\" -> \"http://localhost:5001\"")  #NGROK not need
-
-
 class Config(object):
     SECRET_KEY= 'you-will-never-guess'
 
 app = Flask(__name__)
-# Get the current working directory (cwd) of the application
-basedir = os.path.abspath(os.path.dirname(__file__))
-
-# Construct the path to the SQLite database file in the application directory
-db_path = os.path.join(basedir, 'image5.db')
 
 # Set the SQLAlchemy database URI
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    'postgresql://doadmin:AVNS_El7-s7zchGaCFuyZeXQ@'
+    'db-postgresql-nyc3-64138-do-user-17584761-0.f.db.ondigitalocean.com:25060/defaultdb'
+    '?sslmode=require'
+)
 app.config.from_object(Config)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 db = SQLAlchemy(app)
 IST = timezone('Asia/Kolkata')
-
-def load_spatialite(dbapi_conn, connection_record):
-  # From https://geoalchemy-2.readthedocs.io/en/latest/spatialite_tutorial.html
-  dbapi_conn.enable_load_extension(True)
-  dbapi_conn.load_extension('/usr/lib/x86_64-linux-gnu/mod_spatialite.so')
-
 
 
 def round_half_up(n):
@@ -1664,7 +1647,7 @@ def get_streets_by_polygon():
 
 if __name__ == '__main__':
   with app.app_context():
-    event.listen(db.engine, 'connect', load_spatialite)  # Use the text() function
+    db.engine.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
     logging.basicConfig(filename='error.log',level=logging.INFO)
     db.create_all()
   app.run(port=5001)
