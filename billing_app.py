@@ -328,13 +328,13 @@ def login():
                 return jsonify({'status':True,'token':token.decode('utf-8'),'data':User.serialize_public(user)})
          else:
               app.logger.error('email method user name already exists')
-              return jsonify({'status':False})
+              return jsonify({'status':False, 'message':'pass wrong'})
         except Exception as e:
             error_message = str(e)
             app.logger.error('Login function exception triggered')
             return jsonify({'status': False, 'message': error_message})
     else:
-      return jsonify({'status':False})
+      return jsonify({'status':False, 'message':'post req'})
 
 
 @app.route('/register/', methods=['POST'])
