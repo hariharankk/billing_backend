@@ -8,6 +8,7 @@ import random
 import string
 from datetime import timedelta
 import numpy as np
+import os
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import random
@@ -40,8 +41,14 @@ class Config(object):
     SECRET_KEY= 'you-will-never-guess'
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////content/gdrive/MyDrive/image5.db'
+# Get the current working directory (cwd) of the application
+basedir = os.path.abspath(os.path.dirname(__file__))
 
+# Construct the path to the SQLite database file in the application directory
+db_path = os.path.join(basedir, 'image5.db')
+
+# Set the SQLAlchemy database URI
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config.from_object(Config)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
