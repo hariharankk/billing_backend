@@ -3,7 +3,7 @@ flask
 flask-cors
 flask-sqlalchemy
 requests
-PyJWT
+PyJWT==1.7.1
 werkzeug
 pytz
 sqlalchemy
