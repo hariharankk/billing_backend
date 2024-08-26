@@ -1,4 +1,5 @@
 from shapely import wkb, wkt
+import psycopg2
 from flask import Flask, request, jsonify, send_file,after_this_request,session
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
