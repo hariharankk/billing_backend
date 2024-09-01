@@ -247,7 +247,7 @@ class User(db.Model):
     username = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80))
     email = db.Column(db.String(80), unique=True)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(256))
     admin=db.Column(db.Boolean, default=False, server_default="false")
     phonenumber=db.Column(db.String(80), unique=True)
     products = db.relationship('Product', secondary=user_products, backref='users')
