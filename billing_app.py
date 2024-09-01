@@ -36,9 +36,10 @@ app = Flask(__name__)
 # Set the SQLAlchemy database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     'postgresql://doadmin:AVNS_El7-s7zchGaCFuyZeXQ@'
-    'db-postgresql-nyc3-64138-do-user-17584761-0.f.db.ondigitalocean.com:25060/defaultdb'
+    'db-postgresql-nyc3-64138-do-user-17584761-0.f.db.ondigitalocean.com:25060/app'
     '?sslmode=require'
 )
+
 app.config.from_object(Config)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -114,7 +115,6 @@ def get_shortest_paths_distances(graph, pairs):
     for pair in pairs:
         distances[pair] = nx.dijkstra_path_length(graph, pair[0], pair[1])
     return distances
-
 
 
 def create_eulerian_circuit(graph_augmented, graph_original, starting_node=None):
@@ -1648,7 +1648,6 @@ def get_streets_by_polygon():
 
 if __name__ == '__main__':
   with app.app_context():
-    db.engine.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
     logging.basicConfig(filename='error.log',level=logging.INFO)
     db.create_all()
   app.run(port=5001)
