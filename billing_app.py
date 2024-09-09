@@ -793,7 +793,7 @@ def get_total_amount():
             elif transaction.payment_method == 'upi':
                 upi_total += transaction_total
 
-        Commision = float(round_half_up((cash_total + upi_total - total_return_amount) * 0.01))
+        Commision = float(round_half_up((cash_total + upi_total - total_return_amount) * 0.0025))
         cash_on_hand = round_half_up(cash_total - (total_return_amount + fuel_value_today), )
 
         app.logger.info('Total amounts calculated successfully for user_id: %s', user_id)
