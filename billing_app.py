@@ -992,8 +992,8 @@ def upload_profile():
 class ReturnTable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('User.username'), nullable=False)  # <-- Add this line
-    imgurl = db.Column(db.String(50), nullable=False)
-    reason = db.Column(db.String(50), nullable=False)
+    imgurl = db.Column(db.String(255), nullable=False)
+    reason = db.Column(db.String(255), nullable=False)
     transaction_time = db.Column(db.DateTime(timezone=True), default=lambda: datetime.datetime.now(utc))
     lat = db.Column(db.String(128), nullable=False)
     longi = db.Column(db.String(128), nullable=False)
@@ -1003,7 +1003,7 @@ class ReturnTable(db.Model):
     returnquantity = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Float, nullable=False)
     trans_id = db.Column(db.Integer, nullable=False)
-    idurl = db.Column(db.String(50), nullable=False)
+    idurl = db.Column(db.String(255), nullable=False)
 
 
     def __init__(self, user_id, imgurl, lat, longi, name ,description, price, quantity,returnquantity,reason,idurl,trans_id):  # <-- Update the constructor
@@ -1130,12 +1130,12 @@ class Logbook(db.Model):
     fuel_filled_litres = db.Column(db.Float, default=0.0)
     cost_per_litre = db.Column(db.Float, default=0.0)
     fuel_start_km = db.Column(db.Float, default=0.0)
-    fuelurl = db.Column(db.String(50), default='')
+    fuelurl = db.Column(db.String(255), default='')
     fueltime = db.Column(db.Time, nullable=True)
     morningtime = db.Column(db.Time, nullable=True)
     nighttime = db.Column(db.Time, nullable=True)
-    morningurl = db.Column(db.String(50), default='')
-    nighturl = db.Column(db.String(50), default='')
+    morningurl = db.Column(db.String(255), default='')
+    nighturl = db.Column(db.String(255), default='')
     fuel_updated = db.Column(db.Boolean, default=False)  # <-- Add this line
     night_km_updated = db.Column(db.Boolean, default=False)  # <-- Add this line
 
