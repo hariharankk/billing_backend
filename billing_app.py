@@ -599,9 +599,8 @@ class Transaction(db.Model):
             'lat': self.lat,
             'longi': self.longi,
             'total': float(
-                sum((tp.product_price_at_transaction - tp.product_flatdiscount_at_transaction) * tp.quantity for tp in self.transaction_products)
+                round_half_up(sum((tp.product_price_at_transaction - tp.product_flatdiscount_at_transaction) * tp.quantity for tp in self.transaction_products))
             ),
-
         }
 
 
@@ -740,7 +739,8 @@ def get_total_amount():
 
         # Get products associated with the user and calculate total stock value
         products = user.products
-        total_stock_value = sum([(product.price - product.flatdiscount) * product.stock for product in products])
+        total_stock_value = round_half_up(sum([(product.price - product.flatdiscount) * product.stock for product in products]))
+
         # Format products for JSON response
         products_response = [product.to_dict() for product in products]  # Assuming to_dict() is defined for Product
 
@@ -784,9 +784,9 @@ def get_total_amount():
 
         # Calculate total for each transaction using the saved price and discount
         for transaction in transactions:
-            transaction_total = sum([
-                (tp.product_price_at_transaction - tp.product_flatdiscount_at_transaction) 
-                * tp.quantity for tp in transaction.transaction_products]) 
+            transaction_total = round_half_up(sum([
+                (tp.product_price_at_transaction - tp.product_flatdiscount_at_transaction)
+                * tp.quantity for tp in transaction.transaction_products]))
 
             # Add the transaction total to the appropriate payment method total
             if transaction.payment_method == 'cash':
@@ -795,7 +795,7 @@ def get_total_amount():
                 upi_total += transaction_total
 
         Commision = float(round_half_up((cash_total + upi_total - total_return_amount) * 0.0025))
-        cash_on_hand = round_half_up(cash_total - (total_return_amount + fuel_value_today), )
+        cash_on_hand = round_half_up(cash_total - (total_return_amount))
 
         app.logger.info('Total amounts calculated successfully for user_id: %s', user_id)
         return {
