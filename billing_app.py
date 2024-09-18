@@ -572,12 +572,19 @@ class Transaction(db.Model):
     transaction_time = db.Column(db.DateTime(timezone=True), default=lambda: datetime.datetime.now(utc))
     lat = db.Column(db.String(128), nullable=False)
     longi = db.Column(db.String(128), nullable=False)
+    # Optional fields
+    customer_name = db.Column(db.String(255), nullable=True)
+    customer_address = db.Column(db.String(255), nullable=True)
+    customer_phone = db.Column(db.String(20), nullable=True)
 
-    def __init__(self, user_id, payment_method, lat, longi):  # <-- Update the constructor
+    def __init__(self, user_id, payment_method, lat, longi, customer_name=None, customer_address=None, customer_phone=None):
         self.user_id = user_id
         self.payment_method = payment_method
         self.lat = lat
         self.longi = longi
+        self.customer_name = customer_name  # Optional field
+        self.customer_address = customer_address  # Optional field
+        self.customer_phone = customer_phone  # Optional field
 
     def to_dict(self):
         return {
@@ -601,6 +608,13 @@ class Transaction(db.Model):
             'total': float(
                 round_half_up(sum((tp.product_price_at_transaction - tp.product_flatdiscount_at_transaction) * tp.quantity for tp in self.transaction_products))
             ),
+                    # Add optional fields if they exist
+            if self.customer_name:
+                transaction_dict['customer_name'] = self.customer_name
+            if self.customer_address:
+                transaction_dict['customer_address'] = self.customer_address
+            if self.customer_phone:
+                transaction_dict['customer_phone'] = self.customer_phone
         }
 
 
@@ -680,13 +694,29 @@ def create_transaction():
         data = request.get_json()
         user_id = data['user_id']
 
+        # Retrieve the user from the database
         user = User.query.get(user_id)
         if not user:
             app.logger.error('User not found: %s', user_id)
             return jsonify({'status': False, 'message': "User not found"}), 404
 
-        new_transaction = Transaction(user_id=user_id, payment_method=data['payment_method'], lat=data['lat'], longi=data['longi'])
+        # Extract the optional fields from the request data
+        customer_name = data.get('customer_name', None)  # Optional field
+        customer_address = data.get('customer_address', None)  # Optional field
+        customer_phone = data.get('customer_phone', None)  # Optional field
 
+        # Create the Transaction object with optional fields if provided
+        new_transaction = Transaction(
+            user_id=user_id,
+            payment_method=data['payment_method'],
+            lat=data['lat'],
+            longi=data['longi'],
+            customer_name=customer_name,  # Pass the customer_name if available
+            customer_address=customer_address,  # Pass the customer_address if available
+            customer_phone=customer_phone  # Pass the customer_phone if available
+        )
+
+        # Loop through the products and check availability
         for product_data in data['products']:
             product = Product.query.get(product_data['product_id'])
             if product is None:
@@ -696,6 +726,7 @@ def create_transaction():
                 app.logger.error('Not enough stock for product: %s', product.id)
                 return jsonify({'status': False, 'message': f"Not enough of product {product.id} in stock"}), 400
 
+        # Add the products to the transaction
         for product_data in data['products']:
             product = Product.query.get(product_data['product_id'])
             product.stock -= product_data['quantity']
@@ -712,6 +743,8 @@ def create_transaction():
             )
             db.session.add(tp)
 
+        # Commit the transaction to the database
+        db.session.add(new_transaction)
         db.session.commit()
         app.logger.info('Transaction created successfully for user_id: %s', user_id)
         return jsonify({'status': True, 'transaction': new_transaction.to_dict()}), 201
