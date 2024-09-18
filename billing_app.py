@@ -587,18 +587,19 @@ class Transaction(db.Model):
         self.customer_phone = customer_phone  # Optional field
 
     def to_dict(self):
-        return {
+        # Create the base dictionary
+        transaction_dict = {
             'user_id': self.user_id,
             'id': self.id,
             'products': [
                 {
                     'id': tp.product.id,
-                    'name': tp.product_name_at_transaction,  # Taken from TransactionProduct's stored data
-                    'description': tp.product_description_at_transaction,  # Taken from TransactionProduct's stored data
-                    'price': tp.product_price_at_transaction,  # Taken from TransactionProduct's stored data
+                    'name': tp.product_name_at_transaction,
+                    'description': tp.product_description_at_transaction,
+                    'price': tp.product_price_at_transaction,
                     'quantity': tp.quantity,
-                    'flatdiscount': tp.product_flatdiscount_at_transaction,  # Taken from TransactionProduct's stored data
-                    'weight': tp.product_weight_at_transaction  # New addition here
+                    'flatdiscount': tp.product_flatdiscount_at_transaction,
+                    'weight': tp.product_weight_at_transaction
                 } for tp in self.transaction_products
             ],
             'transaction_time': self.transaction_time.astimezone(IST).strftime('%Y-%m-%dT%H:%M:%S'),
@@ -608,14 +609,17 @@ class Transaction(db.Model):
             'total': float(
                 round_half_up(sum((tp.product_price_at_transaction - tp.product_flatdiscount_at_transaction) * tp.quantity for tp in self.transaction_products))
             ),
-                    # Add optional fields if they exist
-            if self.customer_name:
-                transaction_dict['customer_name'] = self.customer_name
-            if self.customer_address:
-                transaction_dict['customer_address'] = self.customer_address
-            if self.customer_phone:
-                transaction_dict['customer_phone'] = self.customer_phone
         }
+    
+        # Add optional fields if they exist
+        if self.customer_name:
+            transaction_dict['customer_name'] = self.customer_name
+        if self.customer_address:
+            transaction_dict['customer_address'] = self.customer_address
+        if self.customer_phone:
+            transaction_dict['customer_phone'] = self.customer_phone
+    
+        return transaction_dict
 
 
 @token_required
