@@ -567,12 +567,11 @@ def delete_product_for_user():
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('User.username'), nullable=False)  # <-- Add this line
+    user_id = db.Column(db.Integer, db.ForeignKey('User.username'), nullable=False)
     payment_method = db.Column(db.String(50), nullable=False)
     transaction_time = db.Column(db.DateTime(timezone=True), default=lambda: datetime.datetime.now(utc))
     lat = db.Column(db.String(128), nullable=False)
     longi = db.Column(db.String(128), nullable=False)
-    # Optional fields
     customer_name = db.Column(db.String(255), nullable=True)
     customer_address = db.Column(db.String(255), nullable=True)
     customer_phone = db.Column(db.String(20), nullable=True)
@@ -582,12 +581,11 @@ class Transaction(db.Model):
         self.payment_method = payment_method
         self.lat = lat
         self.longi = longi
-        self.customer_name = customer_name  # Optional field
-        self.customer_address = customer_address  # Optional field
-        self.customer_phone = customer_phone  # Optional field
+        self.customer_name = customer_name
+        self.customer_address = customer_address
+        self.customer_phone = customer_phone
 
     def to_dict(self):
-        # Create the base dictionary
         transaction_dict = {
             'user_id': self.user_id,
             'id': self.id,
@@ -610,18 +608,15 @@ class Transaction(db.Model):
                 round_half_up(sum((tp.product_price_at_transaction - tp.product_flatdiscount_at_transaction) * tp.quantity for tp in self.transaction_products))
             ),
         }
-    
-        # Add optional fields if they exist
+
         if self.customer_name:
             transaction_dict['customer_name'] = self.customer_name
         if self.customer_address:
             transaction_dict['customer_address'] = self.customer_address
         if self.customer_phone:
             transaction_dict['customer_phone'] = self.customer_phone
-    
+
         return transaction_dict
-
-
 @token_required
 @app.route('/transactions/all', methods=['GET'])
 def get_transactions():
