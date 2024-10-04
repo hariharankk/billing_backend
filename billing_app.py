@@ -1679,6 +1679,117 @@ def get_streets_by_polygon():
         app.logger.error('Error retrieving streets: %s', str(e))
         return jsonify({'status': False, 'error': str(e)}), 500
 
+
+class ShopData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.username'), nullable=False)  # <-- Add this line
+    imgurl = db.Column(db.String(255), nullable=False)
+    feedback = db.Column(db.String(255), nullable=False)
+    lat = db.Column(db.String(128), nullable=False)
+    longi = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=False)
+    Limit = db.Column(db.Float, nullable=False)
+    rating = db.Column(db.Float, nullable=False)
+
+
+    def __init__(self, user_id, imgurl, lat, longi, name ,description, Limit, rating ,feedback):  # <-- Update the constructor
+        self.user_id = user_id
+        self.imgurl = imgurl
+        self.lat = lat
+        self.longi = longi
+        self.name = name
+        self.description = description
+        self.Limit = Limit
+        self.rating = rating
+        self.feedback = feedback
+
+    def serialize(self):
+        return {
+          'id': self.id,
+          'user_id': self.user_id,
+          'name': self.name,
+          'description': self.description,
+          'Limit': self.Limit,
+          'rating': self.rating,
+          'feedback': self.feedback,
+          'imgurl': self.imgurl,
+          'lat': self.lat,
+          'long': self.longi,
+        }
+
+@token_required
+@app.route('/shopdata/add', methods=['POST'])
+def add_shop():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        user = User.query.get(user_id)
+
+        if not user:
+            app.logger.error('User not found for user_id %s', user_id)
+            return jsonify({'status': False, 'message': 'User not found'}), 404
+
+        imgurl = data.get('imgurl')
+        lat = data.get('lat')
+        longi = data.get('longi')
+        name = data.get('name')
+        description = data.get('description')
+        Limit = data.get('Limit')
+        rating = data.get('rating')
+        feedback = data.get('feedback')
+
+
+
+        # Check for missing or invalid parameters
+        if not all([user_id, imgurl,  lat, longi, name, description, Limit, rating, feedback]):
+            app.logger.error('Missing or invalid parameters')
+            return jsonify({'status': False, 'message': 'Missing or invalid parameters'}), 400
+
+        new_shop = ShopData(
+            user_id=user_id,
+            imgurl=imgurl,
+            lat=lat,
+            longi=longi,
+            name=name,
+            Limit=Limit,
+            rating=rating,
+            feedback=feedback,
+            description=description,
+        )
+
+        db.session.add(new_shop)
+        db.session.commit()
+        app.logger.info('New Shop sucessfully added by user_id %s', user_id)
+        return jsonify({'status': True, 'shop_data': new_shop.serialize()}), 201
+
+    except Exception as e:
+        app.logger.error('Error creating shop data: %s', str(e))
+        return jsonify({'status': False, 'error': str(e)}), 500
+
+@token_required
+@app.route('/shopdata/get', methods=['GET'])
+def get_shops():
+    try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            app.logger.error('User ID not provided')
+            return jsonify({'status': False, 'message': 'User ID not provided'}), 400
+
+        user = User.query.get(user_id)
+        if not user:
+            app.logger.error('User not found for user_id %s', user_id)
+            return jsonify({'status': False, 'message': 'User not found'}), 404
+
+        shop_data = ShopData.query.filter_by(user_id=user_id).all()
+        app.logger.info('shop data retrieved successfully for user_id %s', user_id)
+        return jsonify({'status': True, 'shop_data': [sd.serialize() for sd in shop_data]}), 200
+
+    except Exception as e:
+        app.logger.error('Error retrieving shop data: %s', str(e))
+        return jsonify({'status': False, 'error': str(e)}), 500
+
+
 if __name__ == '__main__':
   with app.app_context():
     logging.basicConfig(filename='error.log',level=logging.INFO)
