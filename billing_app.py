@@ -609,11 +609,11 @@ class Transaction(db.Model):
             ),
         }
 
-        if self.customer_name != None:
+        if self.customer_name:
             transaction_dict['customer_name'] = self.customer_name
-        if self.customer_address != None:
+        if self.customer_address:
             transaction_dict['customer_address'] = self.customer_address
-        if self.customer_phone != None:
+        if self.customer_phone:
             transaction_dict['customer_phone'] = self.customer_phone
 
         return transaction_dict
