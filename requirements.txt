@@ -1,14 +1,10 @@
-shapely
 flask
 flask-cors
 flask-sqlalchemy
-requests
 PyJWT==1.7.1
 werkzeug
 pytz
 sqlalchemy
-networkx
-geoalchemy2
 gunicorn
 psycopg2
 
