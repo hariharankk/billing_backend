@@ -207,6 +207,17 @@ class TransactionProduct(db.Model):
     transaction = db.relationship("Transaction", backref=db.backref("transaction_products", cascade="all, delete-orphan"))
     product = db.relationship("Product", backref=db.backref("transaction_products", cascade="all, delete-orphan"))
 
+    def to_dict(self):
+        return {
+            'id': self.product_id,
+            'name': self.product_name_at_transaction,
+            'description': self.product_description_at_transaction,
+            'price': self.product_price_at_transaction,
+            'quantity': self.quantity,
+            'flatdiscount': self.product_flatdiscount_at_transaction,
+            'weight': self.product_weight_at_transaction,
+        }
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -414,28 +425,20 @@ class Transaction(db.Model):
         self.customer_address = customer_address
         self.customer_phone = customer_phone
 
+    @property
+    def total(self):
+        return sum((tp.product_price_at_transaction - tp.product_flatdiscount_at_transaction) * tp.quantity for tp in self.transaction_products)
+
     def to_dict(self):
         transaction_dict = {
             'user_id': self.user_id,
             'id': self.id,
-            'products': [
-                {
-                    'id': tp.product.id,
-                    'name': tp.product_name_at_transaction,
-                    'description': tp.product_description_at_transaction,
-                    'price': tp.product_price_at_transaction,
-                    'quantity': tp.quantity,
-                    'flatdiscount': tp.product_flatdiscount_at_transaction,
-                    'weight': tp.product_weight_at_transaction
-                } for tp in self.transaction_products
-            ],
+            'products': [tp.to_dict() for tp in self.transaction_products],
             'transaction_time': self.transaction_time.astimezone(IST).strftime('%Y-%m-%dT%H:%M:%S'),
             'payment_method': self.payment_method,
             'lat': self.lat,
             'longi': self.longi,
-            'total': float(
-                round_half_up(sum((tp.product_price_at_transaction - tp.product_flatdiscount_at_transaction) * tp.quantity for tp in self.transaction_products))
-            ),
+            'total': float(round_half_up(self.total)),
         }
 
         if self.customer_name != None:
@@ -544,7 +547,7 @@ def create_transaction():
             customer_phone=customer_phone  # Pass the customer_phone if available
         )
 
-        # Loop through the products and check availability
+        # Validate stock and build transaction items
         for product_data in data['products']:
             product = Product.query.get(product_data['product_id'])
             if product is None:
@@ -554,22 +557,18 @@ def create_transaction():
                 app.logger.error('Not enough stock for product: %s', product.id)
                 return jsonify({'status': False, 'message': f"Not enough of product {product.id} in stock"}), 400
 
-        # Add the products to the transaction
-        for product_data in data['products']:
-            product = Product.query.get(product_data['product_id'])
             product.stock -= product_data['quantity']
-
-            tp = TransactionProduct(
-                transaction=new_transaction,
-                product=product,
-                quantity=product_data['quantity'],
-                product_name_at_transaction=product.name,
-                product_description_at_transaction=product.description,
-                product_price_at_transaction=product.price,
-                product_flatdiscount_at_transaction=product.flatdiscount,
-                product_weight_at_transaction=product.weight
+            new_transaction.transaction_products.append(
+                TransactionProduct(
+                    product=product,
+                    quantity=product_data['quantity'],
+                    product_name_at_transaction=product.name,
+                    product_description_at_transaction=product.description,
+                    product_price_at_transaction=product.price,
+                    product_flatdiscount_at_transaction=product.flatdiscount,
+                    product_weight_at_transaction=product.weight,
+                )
             )
-            db.session.add(tp)
 
         # Commit the transaction to the database
         db.session.add(new_transaction)
